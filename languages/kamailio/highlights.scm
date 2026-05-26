@@ -112,30 +112,57 @@
   left: (identifier) @variable.builtin)
 
 ; ----- Pseudo variables ($var, $rU, $hdr(...), etc.) --------------
-(pseudo_variable
-  "$" @keyword.operator
-  var: (pseudo_content) @variable.builtin)
-(pvar_expression
-  "$" @keyword.operator
-  var: (pseudo_content) @variable.builtin)
+; Kamailio pseudo-variables are sigil-prefixed runtime values:
+;
+;   $rU              bare built-in pvar
+;   $T_branch_idx    bare built-in pvar (transaction)
+;   $var(x)          user-named container
+;   $avp(name)       user-named AVP
+;   $xavp(n[0]=>f)   xavp with index and field accessor
+;   $hdr(From)       SIP header lookup
+;   $sht(ht=>$ci)    hash-table cell
+;   $T_req($var(x))  composed pvars
+;   $(rU{s.tolower}) parenthesised form with transformation
+;
+; The whole `$…` expression is painted with `@variable.builtin` so
+; the sigil, container name and built-in pvar tokens all share one
+; colour. The more-specific rules below then re-paint the user-named
+; portions so they visually stand out from the built-in container
+; name itself.
+(pseudo_variable) @variable.builtin
+(pvar_expression) @variable.builtin
 
-(var_
-  name: (pvar_argument) @variable)
-(avp_var
-  name: (pvar_argument) @variable)
-(dlg_var
-  name: (pvar_argument) @variable)
+; `$null` / `$NULL` — captured by the dedicated `null` node; keep it
+; coloured as a builtin constant rather than as a variable.
+(null) @constant.builtin
 
-(xavp_values
-  name: (identifier) @variable
-  index: (identifier) @variable.builtin
-  field: (identifier) @property)
+; User-named argument in container pseudo-vars.
+(var_     name: (pvar_argument) @variable)
+(avp_var  name: (pvar_argument) @variable)
+(dlg_var  name: (pvar_argument) @variable)
+(shv_var  name: (pvar_argument) @variable)
+(dsv_var  name: (pvar_argument) @variable)
 
+; xavp / xavi / xavu values: NAME + optional INDEX + optional FIELD.
+(xavp_values name:  (identifier) @variable)
+(xavp_values index: (identifier) @variable.builtin)
+(xavp_values field: (identifier) @property)
+(xavu_values name:  (identifier) @variable)
+(xavu_values field: (identifier) @property)
+
+; Header lookups: $hdr(NAME), $hdrc(NAME) — NAME is a SIP header name,
+; treated like a property/string key.
+(hdr  name: (pvar_argument) @string.special)
+(hdrc name: (identifier)    @string.special)
+
+; Hash-table cell: $sht(HTNAME => KEY).
 (htable
   htable: (identifier) @variable
   "=>" @punctuation.special)
 
 ; ----- Transformations  {s.len}, {uri.host}, ... ------------------
+; Paint the braces and the transformation specifier distinctly so
+; `$rU{s.tolower}` reads as "pvar  TRANSFORM".
 (transformation) @function.builtin
 
 ; ----- Regex patterns ---------------------------------------------

@@ -105,8 +105,9 @@ After editing any of the query files, reload the dev extension via
 
 The Tree-sitter grammar is forked from upstream
 [`IbrahimShahzad/tree-sitter-kamailio-cfg`](https://github.com/IbrahimShahzad/tree-sitter-kamailio-cfg)
-to add support for preprocessor directives that the upstream grammar
-doesn't yet recognise:
+with the following additions:
+
+**Preprocessor directives the upstream grammar doesn't yet recognise:**
 
 | Directive       | Notes                                                              |
 | --------------- | ------------------------------------------------------------------ |
@@ -120,10 +121,24 @@ doesn't yet recognise:
 | `#!defexps`     | Same as `#!defexp`, but the value is wrapped as a string literal   |
 | `#!ifexp`       | Conditional block guarded by an arbitrary expression (`#!endif`)   |
 
+**Pseudo-variable forms the upstream grammar doesn't accept:**
+
+- Bare-form transformations: `$rU{s.tolower}{s.len}` (upstream only
+  accepted the parenthesised form `$(rU{s.tolower})`).
+- Identifier / string arguments for `$T_req(...)`, `$T_rpl(...)`,
+  `$T_inv(...)`, e.g. `$T_req(From)` (upstream required a nested
+  `$`-variable).
+
+**String transformations now accept quoted arguments:**
+
+`s.rm`, `s.replace`, `s.after`, `s.rafter`, `s.before`, `s.rbefore`,
+`s.count`, `s.select`, and `s.ftime` originally only accepted a single
+unquoted character. They now also accept a quoted string literal, so
+expressions such as `$(var(x){s.rm, '"'})` and
+`$(var(x){s.replace, "old", "new"})` parse correctly.
+
 Without these grammar rules, the parser either produces `ERROR` nodes
-(e.g. `#!defenv WITH_DB=DB_URL`) or silently mis-tokenises (e.g.
-`#!trydefenv DBHOST` ⇒ `#!trydef name="env" value="DBHOST"`), and no
-query rule can recover from that.
+or silently mis-tokenises, and no query rule can recover from that.
 
 By default, `extension.toml` points at a local sibling checkout of the
 fork via a `file://` URL:

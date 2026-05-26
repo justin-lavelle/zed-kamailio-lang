@@ -8,15 +8,28 @@ repository = "https://github.com/your-name/zed-kamailio"
 
 [grammars.kamailio_cfg]
 # Local fork of https://github.com/IbrahimShahzad/tree-sitter-kamailio-cfg
-# with added support for the following preprocessor directives that the
-# upstream grammar doesn't yet recognise:
-#   #!trydefine (alias for #!trydef)
-#   #!redef     (alias for #!redefine)
-#   #!defenv    #!defenvs
-#   #!trydefenv #!trydefenvs
-#   #!defexp    #!defexps
-#   #!ifexp
+# with added support for:
+#
+#   * Preprocessor directives the upstream grammar doesn't recognise:
+#       #!trydefine (alias for #!trydef)
+#       #!redef     (alias for #!redefine)
+#       #!defenv    #!defenvs
+#       #!trydefenv #!trydefenvs
+#       #!defexp    #!defexps
+#       #!ifexp
+#
+#   * Bare-form transformations on pseudo-variables, e.g.
+#       $rU{s.tolower}{s.len}    (used to require $(rU{s.tolower}))
+#
+#   * Identifier/string arguments for $T_req() / $T_rpl() / $T_inv():
+#       $T_req(From)             (used to require a nested $-var)
+#
+#   * Quoted-string arguments for the s.rm / s.replace / s.after /
+#     s.rafter / s.before / s.rbefore / s.count / s.select / s.ftime
+#     transformations, e.g.
+#       $(var(x){s.rm, '"'})     (used to require a single bare char)
+#
 # For publishing to the Zed extensions registry, push this fork to a
 # public GitHub repository and replace the URL + commit below.
 repository = "file:///Users/justinl/code/zed/tree-sitter-kamailio-cfg"
-commit = "b195fed14c12ea94265046c196f9da53a0d28489"
+commit = "3d8946206a74449199a1116bcfdea23a0e4c0649"
